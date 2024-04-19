@@ -1,202 +1,227 @@
-; File Name  : group7_simon_says.asm
 ;
-; Author     : Group 7
-; Description: Your project description 
+; File Name  : gpio_tm1_int.asm
+;
+; Author     : Prof. Allen
+; Description: GPIO Output with timers and interrupts
+;   Uses Timer1 with Overflow Interrupt, External Interrupt 0,
+;   and a Pin-Change interrupt 
 ; ------------------------------------------------------------
 
-.equ DELAY_S = 65536 - (1000000 / 16)   ; sleep 1 second
+.equ DELAY_CNT = 65536 - (1000000 / 16) ; 16 == 1 / 16MHz / 256
+
 .equ LED_DELAY = 3
 
-.def redLedCnt = r21
+.def blueLedCnt = R21
+.def greenLedCnt = R22
+.def redLedCnt = R23
+.def whiteLedCnt = R24
 
 ; Vector Table
 ; ------------------------------------------------------------
-.org 0x0000
+.org 0x0000                             ; reset vector
           jmp       main
 
-.org INTO0addr
-          jmp       red_btn_isr
+.org INT0addr                           ; Ext Int 0 for Blue LED Button
+          jmp       blue_led_btn_ISR
 
-.equ OVF1addr
-          jmp tm1_ISR
+.org INT1addr
+          jmp       red_led_btn_ISR
 
-.org INT_VECTORS_SIZE                   ; end vector table      
+.org PCI2addr
+          jmp       green_led_btn_ISR
+
+.org PCI0addr
+          jmp       white_led_btn_ISR
+
+
+.org OVF1addr	                    ; Timer/Counter1 Overflow
+          jmp       tm1_ISR
+
+.org INT_VECTORS_SIZE
+; end vector table
+; ------------------------------------------------------------
 
 ; ------------------------------------------------------------
 main:
-;            main application method
+; main application method
 ;         one-time setup & configuration
 ; ------------------------------------------------------------
-;
-;         Light 1, Button 1
-; ------------------------------------------------------------
-          sbi       DDRB, DDB1          ; setting LED 1 to output
-          cbi       PORTB, PORTB1       ; turn LED 1 off
+       
+          sbi       DDRB,DDB2           ; setting Green LED pin to output (D10)
+          cbi       PORTB,PB2           ; turn Green LED Off (D10)
 
-          cbi       DDRD, DDD2          ; put button 1 in input mode
-          sbi       PORTD, PD2          ; make input pull-up
-;         Light 2, Button 2
-; ------------------------------------------------------------
-          sbi       DDRB, DDB2          ; setting LED 2 output
-          cbi       PORTB, PORTB2       ; turn LED 2 off
+          sbi       DDRB,DDB4           ; setting Red LED pin to output (D12)
+          cbi       PORTB,PB4           ; turn Red LED Off (D14)
 
-          cbi       DDRD, DDD3          ; put button 2 in input mode
-          sbi       PORTD, PD3          ; make input pull-up
-;         Light 3, Button 3
-; ------------------------------------------------------------
-          sbi       DDRB, DDB4          ; setting LED 3 output
-          cbi       PORTB, PORTB4       ; turn LED 3 off
+          sbi       DDRB,DDB3           ; setting Blue LED pin to output (D12)
+          cbi       PORTB,PB3           ; turn Blue LED Off (D14)
 
-          cbi       DDRD, DDD5          ; put button 3 in input mode
-          sbi       PORTD, PD5          ; make input pull-up
-;         Light 4, Button 4
-; ------------------------------------------------------------
-          sbi       DDRB, DDB5          ; setting LED 4 output
-          cbi       PORTB, PORTB5       ; turn LED 4 off
+          sbi       DDRB,DDB5           ; setting white LED pin to output (D12)
+          cbi       PORTB,PB5           ; turn white LED Off (D14)
 
-          cbi       DDRD, DDD6          ; put button 4 in input mode
-          sbi       PORTD, PD6          ; make input pull-up
-;
-;         timer
-; ------------------------------------------------------------
-          call      tm1_init            ; initialize timer 1
+
+          cbi       DDRD,DDD2           ; set Blue LED Btn to input (D2)
+          sbi       PORTD,PD2           ; engage pull-up
+          sbi       EIMSK,INT0          ; enable external interrupt 0 for Blue LED Btn
+          ldi       r20,0b00000010      ; set falling edge sense bits for ext int 0
+          sts       EICRA,r20
+
+          cbi       DDRD,DDD3           ; set Blue LED Btn to input (D3)
+          sbi       PORTD,PD3           ; engage pull-up
+          sbi       EIMSK,INT1
+
+          cbi       DDRD,DDD4           ; set Green LED Btn to input (D4)
+          cbi       PORTD,PD4           ; set high-impedance
+          ldi       r20, 0b00010000     ; enable port 5, PCINT20
+          sts       PCMSK2, r20         ; Port D
+          ldi       r20, (1<<PCIE2)     ; 
+          sts       PCICR, r20          ; enable PORTD change interrupt
+
+          cbi       DDRD, DDD5          ; set White LED Btn to input (D5)
+          cbi       PORTD, PD5          ; set high-impedance
+          ldi       r19, (1<<PCINT0)
+          sts       PCMSK0, r19
+          ldi       r19, (1<<PCIE0)
+          sts       PCICR, r19
+
+          call      tm1_init            ; initialize timer1
+
           sei                           ; enable global interrupts
-
 
 main_loop:                              ; loop continuously 
 ; ------------------------------------------------------------
-
-
+          ; all events are being handled by the 
+          ; interrupt service routines
 end_main:
           rjmp      main_loop           ; stay in main loop
-          
-;         Button Presses
-; ------------------------------------------------------------
-button_1_press:                         ; do {
-          sbic      PIND, PIND2         ;    break on high // checks if pin d2 is set (which it is in line 24)
-          rjmp      button_1_press        ; } while(true) // if pin d2 is set skip this instruction
-          
-          sbis      PINB, PINB1         ; if (led is on) skip next instruction
-          rjmp      led_1_on              ; go to turn led on
-          rjmp      led_1_off             ; go to turn led off
-; ------------------------------------------------------------
-button_2_press:                         ; do {
-          sbic      PIND, PIND3         ;    break on high // checks if pin d2 is set (which it is in line 24)
-          rjmp      button_2_press        ; } while(true) // if pin d2 is set skip this instruction
-          
-          sbis      PINB, PINB2         ; if (led is on) skip next instruction
-          rjmp      led_2_on              ; go to turn led on
-          rjmp      led_2_off             ; go to turn led off
-; ------------------------------------------------------------
-button_3_press:                         ; do {
-          sbic      PIND, PIND4         ;    break on high // checks if pin d2 is set (which it is in line 24)
-          rjmp      button_3_press        ; } while(true) // if pin d2 is set skip this instruction
-          
-          sbis      PINB, PINB4         ; if (led is on) skip next instruction
-          rjmp      led_3_on              ; go to turn led on
-          rjmp      led_3_off             ; go to turn led off
-; ------------------------------------------------------------
-button_4_press:                         ; do {
-          sbic      PIND, PIND5         ;    break on high // checks if pin d2 is set (which it is in line 24)
-          rjmp      button_4_press        ; } while(true) // if pin d2 is set skip this instruction
-          
-          sbis      PINB, PINB5         ; if (led is on) skip next instruction
-          rjmp      led_4_on              ; go to turn led on
-          rjmp      led_4_off             ; go to turn led off
 
-;
-; ------------------------------------------------------------
-led_1_on:
-          sbi       PORTB, PB1          ; turns on led
-          rjmp      led_end             ; jumps to led end to call delay
-led_1_off:
-          cbi       PORTB, PB1          ; turns led off then calls delay
-;
-; ------------------------------------------------------------
-led_2_on:
-          sbi       PORTB, PB2          ; turns on led
-          rjmp      led_end             ; jumps to led end to call delay
-led_2_off:
-          cbi       PORTB, PB2          ; turns led off then calls delay
-;
-; ------------------------------------------------------------
-led_3_on:
-          sbi       PORTB, PB4          ; turns on led
-          rjmp      led_end             ; jumps to led end to call delay
-led_3_off:
-          cbi       PORTB, PB4          ; turns led off then calls delay
-;
-; ------------------------------------------------------------
-led_4_on:
-          sbi       PORTB, PB5          ; turns on led
-          rjmp      led_end             ; jumps to led end to call delay
-led_4_off:
-          cbi       PORTB, PB5          ; turns led off then calls delay
-;
-; ------------------------------------------------------------
-; jump to next led 
-led_end:
-          call      delay_tm1            ; sleep(n)
 
+; ------------------------------------------------------------
 tm1_init:
+; initialize timer1 with interrupts
+; ------------------------------------------------------------
+          ; set timer counter
           ldi       r20,HIGH(DELAY_CNT)
           sts       TCNT1H,r20
           ldi       r20,LOW(DELAY_CNT)
           sts       TCNT1L,r20
 
-          clr       r20                 ; Normal Mode
-          sts       TCCR1A, r20
+          clr       r20                 ; normal mode
+          sts       TCCR1A,r20
 
-          ldi       r20, (1<<CS12)      ; left shift operator, take a 1 and move it to position 2 in binary. Normal Mode Clock 256
-          sts       TCCR1B, r20
+          ldi       r20,(1<<CS12)       ; normal mode, clk/256
+          sts       TCCR1B,r20          ; clock is started
 
-          ldi       r20, (1<<TOIE1)     ; enabling timer overflow interrupt
-          sts       TIMSK1, r20
+          ldi       r20,(1<<TOIE1)      ; enable timer overflow interrupt
+          sts       TIMSK1,r20
 
-          ret
+          ret                           ; delay_tm1
 
+; ------------------------------------------------------------
 tm1_ISR:
-;-------------------------------------------------------------
-          ldi       r20, HIGH(DELAY_CNT)
-          sts       TCNT1H, r20
-          ldi       r20, LOW(DELAY_CNT)
-          sts       TCNT1L, r20
+; handle timer1 interrupts (overflow)
+; ------------------------------------------------------------
+          tst       blueLedCnt          ; if (blueLedCnt != 0)
+          brne      tm1_isr_dec_blue    ;    go dec blue count
+                                        ; else
+          cbi       PORTB,PB2           ;    turn off blue LED
+          rjmp      tm1_isr_green
 
-          clr       r20
-          sts       TCCR1A, r20
-
-          ldi       r20, (1<<CS12)
-          sts       TCCR1B, r20
-
-          ldi       r20, (1<<TOIE1)
-          sts       TIMSK1, r20
-
-          ret
-
-tm1_ISR
-          tst       redLedCnt
-          breq      red_btn_off
+tm1_isr_dec_blue:
+          dec       blueLedCnt          ;  blueLedCnt--          
           
-          dec       redLedCnt
-          rjmp      tm1_isr_ret     
+tm1_isr_green:
+          tst       greenLedCnt          ; if (greenLedCnt != 0)
+          brne      tm1_isr_dec_green    ;    go dec green count
+                                         ; else
+          cbi       PORTB,PB4            ;    turn off green LED
+          rjmp      tm1_isr_red
 
-tm1_red_off:
-          cbi PORTB, PB1
+tm1_isr_dec_green:
+          dec       greenLedCnt          ;  greenLedCnt--   
+
+tm1_isr_red:
+          tst       redLedCnt
+          brne      tm1_isr_dec_red
+
+          cbi       PORTB, PB3
+          rjmp      tm1_isr_white
+
+tm1_isr_dec_red:
+          dec       redLedCnt
+
+tm1_isr_white:
+          tst       whiteLedCnt
+          brne      tm1_isr_dec_white
+
+          cbi       PORTB, PB5
+          rjmp      tm1_isr_ret
+
+tm1_isr_dec_white:
+          dec       whiteLedCnt
 
 tm1_isr_ret:
-          ldi       r20, HIGH(DELAY_CNT)
-          sts       TCNT1h, r20
-          ldi       r20, LOW(DELAY_CNT)
-          sts       TCNT1L, r20
+          ldi       r20,HIGH(DELAY_CNT) ; reset timer counter
+          sts       TCNT1H,r20
+          ldi       r20,LOW(DELAY_CNT)
+          sts       TCNT1L,r20
 
           reti
 
-red_btn_isr:
-          tst       redLedCnt
-          brne      red_btn_isr_ret
+blue_led_btn_ISR:
+; handle external interrupts 0 calls for the Blue LED button
+; ------------------------------------------------------------
+          tst       blueLedCnt          ; if (blueLedCnt != 0)
+          brne      blue_led_btn_ret    ;    return
+                                        ; else
+          sbi       PORTB,PB2           ;    turn on Blue LED
+          ldi       blueLedCnt,LED_DELAY;    set LED counter
 
-          sbi       PORTB, PB1
+blue_led_btn_ret:
+          reti
+
+red_led_btn_ISR:
+          tst       redLedCnt
+          brne      red_led_btn_ret
+          
+          sbi       PORTB,PB3
           ldi       redLedCnt, LED_DELAY
 
-red_btn_isr_ret:
+red_led_btn_ret:
+          reti
+
+green_led_btn_ISR:
+; handle pin-change interrupts calls for the Green LED button
+;
+; Pin change interrupts use "Any-Change" or they fire for both
+; falling-edge and rising-edge.
+;
+; Since PD4 is in high-impedance, we only want to handle
+; intterupts when the voltage change was from low->high (rising edge)
+; ------------------------------------------------------------
+          sbis      PIND,PIND4          ; if(rising-edge) //skip
+          rjmp      green_led_btn_ret   ; else return
+
+          tst       greenLedCnt         ; if (greenLedCnt != 0)
+          brne      green_led_btn_ret   ;    return
+                                        ; else
+          sbi       PORTB,PB4           ;    turn on Green LED
+          ldi       greenLedCnt,LED_DELAY;   set LED counter
+
+green_led_btn_ret:
+          reti
+
+white_led_btn_ISR:
+; handle pin-change interrupts calls for the Green LED button
+; ------------------------------------------------------------
+          sbis      PIND,PIND5          ; if(rising-edge) //skip
+          rjmp      white_led_btn_ret   ; else return
+
+          tst       whiteLedCnt         ; if (greenLedCnt != 0)
+          brne      white_led_btn_ret   ;    return
+                                        ; else
+          sbi       PORTB,PB5           ;    turn on Green LED
+          ldi       whiteLedCnt,LED_DELAY;   set LED counter
+
+white_led_btn_ret:
           reti
