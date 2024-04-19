@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.2.8  C:\Users\Fed\OneDrive - Florida Gulf Coast University\Documents\CDA3104\group_project\GroupProject\group7_simon_says.asm Fri Apr 19 12:06:35 2024
+AVRASM ver. 2.2.8  C:\Users\Fed\OneDrive - Florida Gulf Coast University\Documents\CDA3104\group_project\GroupProject\group7_simon_says.asm Fri Apr 19 12:16:21 2024
 
 
 EQU  SIGNATURE_000 0000001e
@@ -702,23 +702,23 @@ DEF  greenLedCnt  r22
 DEF  redLedCnt    r23
 DEF  whiteLedCnt  r24
 CSEG main         00000034
-CSEG blue_led_btn_ISR 00000084
-CSEG red_led_btn_ISR 00000089
-CSEG green_led_btn_ISR 0000008e
-CSEG white_led_btn_ISR 00000095
-CSEG tm1_ISR      00000069
-CSEG tm1_init     00000059
-CSEG main_loop    00000058
-CSEG end_main     00000058
-CSEG tm1_isr_dec_blue 0000006d
-CSEG tm1_isr_green 0000006e
-CSEG tm1_isr_dec_green 00000072
-CSEG tm1_isr_red  00000073
-CSEG tm1_isr_dec_red 00000077
-CSEG tm1_isr_white 00000078
-CSEG tm1_isr_dec_white 0000007c
-CSEG tm1_isr_ret  0000007d
-CSEG blue_led_btn_ret 00000088
-CSEG red_led_btn_ret 0000008d
-CSEG green_led_btn_ret 00000094
-CSEG white_led_btn_ret 0000009b
+CSEG blue_led_btn_ISR 0000007e
+CSEG red_led_btn_ISR 00000083
+CSEG green_led_btn_ISR 00000088
+CSEG white_led_btn_ISR 0000008f
+CSEG tm1_ISR      00000063
+CSEG tm1_init     00000053
+CSEG main_loop    00000052
+CSEG end_main     00000052
+CSEG tm1_isr_dec_blue 00000067
+CSEG tm1_isr_green 00000068
+CSEG tm1_isr_dec_green 0000006c
+CSEG tm1_isr_red  0000006d
+CSEG tm1_isr_dec_red 00000071
+CSEG tm1_isr_white 00000072
+CSEG tm1_isr_dec_white 00000076
+CSEG tm1_isr_ret  00000077
+CSEG blue_led_btn_ret 00000082
+CSEG red_led_btn_ret 00000087
+CSEG green_led_btn_ret 0000008e
+CSEG white_led_btn_ret 00000095

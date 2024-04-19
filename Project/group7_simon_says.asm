@@ -30,7 +30,7 @@
 .org PCI2addr
           jmp       green_led_btn_ISR
 
-.org PCI0addr
+.org PCI1addr
           jmp       white_led_btn_ISR
 
 
@@ -72,17 +72,13 @@ main:
 
           cbi       DDRD,DDD4           ; set Green LED Btn to input (D4)
           cbi       PORTD,PD4           ; set high-impedance
-          ldi       r20, 0b00010000     ; enable port 5, PCINT20
+          cbi       DDRD, DDD5          ; set White LED Btn to input (D5)
+          cbi       PORTD, PD5          ; set high-impedance
+          ldi       r20, 0b00110000     ; enable ports 4 and 5, PCINT20 and PCINT21
           sts       PCMSK2, r20         ; Port D
           ldi       r20, (1<<PCIE2)     ; 
           sts       PCICR, r20          ; enable PORTD change interrupt
-
-          cbi       DDRD, DDD5          ; set White LED Btn to input (D5)
-          cbi       PORTD, PD5          ; set high-impedance
-          ldi       r19, (1<<PCINT0)
-          sts       PCMSK0, r19
-          ldi       r19, (1<<PCIE0)
-          sts       PCICR, r19
+          
 
           call      tm1_init            ; initialize timer1
 

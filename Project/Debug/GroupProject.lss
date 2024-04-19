@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.2.8  C:\Users\Fed\OneDrive - Florida Gulf Coast University\Documents\CDA3104\group_project\GroupProject\group7_simon_says.asm Fri Apr 19 12:06:35 2024
+AVRASM ver. 2.2.8  C:\Users\Fed\OneDrive - Florida Gulf Coast University\Documents\CDA3104\group_project\GroupProject\group7_simon_says.asm Fri Apr 19 12:16:21 2024
 
 [builtin](2): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m328Pdef.inc'
 [builtin](2): Including file 'C:/Program Files (x86)\Atmel\Studio\7.0\Packs\atmel\ATmega_DFP\1.7.374\avrasm\inc\m328Pdef.inc'
@@ -1008,20 +1008,20 @@ AVRASM ver. 2.2.8  C:\Users\Fed\OneDrive - Florida Gulf Coast University\Documen
 000000 940c 0034                           jmp       main
                                  
                                  .org INT0addr                           ; Ext Int 0 for Blue LED Button
-000002 940c 0084                           jmp       blue_led_btn_ISR
+000002 940c 007e                           jmp       blue_led_btn_ISR
                                  
                                  .org INT1addr
-000004 940c 0089                           jmp       red_led_btn_ISR
+000004 940c 0083                           jmp       red_led_btn_ISR
                                  
                                  .org PCI2addr
-00000a 940c 008e                           jmp       green_led_btn_ISR
+00000a 940c 0088                           jmp       green_led_btn_ISR
                                  
-                                 .org PCI0addr
-000006 940c 0095                           jmp       white_led_btn_ISR
+                                 .org PCI1addr
+000008 940c 008f                           jmp       white_led_btn_ISR
                                  
                                  
                                  .org OVF1addr	                    ; Timer/Counter1 Overflow
-00001a 940c 0069                           jmp       tm1_ISR
+00001a 940c 0063                           jmp       tm1_ISR
                                  
                                  .org INT_VECTORS_SIZE
                                  ; end vector table
@@ -1058,28 +1058,24 @@ AVRASM ver. 2.2.8  C:\Users\Fed\OneDrive - Florida Gulf Coast University\Documen
                                  
 000045 9854                                cbi       DDRD,DDD4           ; set Green LED Btn to input (D4)
 000046 985c                                cbi       PORTD,PD4           ; set high-impedance
-000047 e140                                ldi       r20, 0b00010000     ; enable port 5, PCINT20
-000048 9340 006d                           sts       PCMSK2, r20         ; Port D
-00004a e044                                ldi       r20, (1<<PCIE2)     ; 
-00004b 9340 0068                           sts       PCICR, r20          ; enable PORTD change interrupt
+000047 9855                                cbi       DDRD, DDD5          ; set White LED Btn to input (D5)
+000048 985d                                cbi       PORTD, PD5          ; set high-impedance
+000049 e340                                ldi       r20, 0b00110000     ; enable ports 4 and 5, PCINT20 and PCINT21
+00004a 9340 006d                           sts       PCMSK2, r20         ; Port D
+00004c e044                                ldi       r20, (1<<PCIE2)     ; 
+00004d 9340 0068                           sts       PCICR, r20          ; enable PORTD change interrupt
+                                           
                                  
-00004d 9855                                cbi       DDRD, DDD5          ; set White LED Btn to input (D5)
-00004e 985d                                cbi       PORTD, PD5          ; set high-impedance
-00004f e031                                ldi       r19, (1<<PCINT0)
-000050 9330 006b                           sts       PCMSK0, r19
-000052 e031                                ldi       r19, (1<<PCIE0)
-000053 9330 0068                           sts       PCICR, r19
+00004f 940e 0053                           call      tm1_init            ; initialize timer1
                                  
-000055 940e 0059                           call      tm1_init            ; initialize timer1
-                                 
-000057 9478                                sei                           ; enable global interrupts
+000051 9478                                sei                           ; enable global interrupts
                                  
                                  main_loop:                              ; loop continuously 
                                  ; ------------------------------------------------------------
                                            ; all events are being handled by the 
                                            ; interrupt service routines
                                  end_main:
-000058 cfff                                rjmp      main_loop           ; stay in main loop
+000052 cfff                                rjmp      main_loop           ; stay in main loop
                                  
                                  
                                  ; ------------------------------------------------------------
@@ -1087,94 +1083,94 @@ AVRASM ver. 2.2.8  C:\Users\Fed\OneDrive - Florida Gulf Coast University\Documen
                                  ; initialize timer1 with interrupts
                                  ; ------------------------------------------------------------
                                            ; set timer counter
-000059 e04b                                ldi       r20,HIGH(DELAY_CNT)
-00005a 9340 0085                           sts       TCNT1H,r20
-00005c ed4c                                ldi       r20,LOW(DELAY_CNT)
-00005d 9340 0084                           sts       TCNT1L,r20
+000053 e04b                                ldi       r20,HIGH(DELAY_CNT)
+000054 9340 0085                           sts       TCNT1H,r20
+000056 ed4c                                ldi       r20,LOW(DELAY_CNT)
+000057 9340 0084                           sts       TCNT1L,r20
                                  
-00005f 2744                                clr       r20                 ; normal mode
-000060 9340 0080                           sts       TCCR1A,r20
+000059 2744                                clr       r20                 ; normal mode
+00005a 9340 0080                           sts       TCCR1A,r20
                                  
-000062 e044                                ldi       r20,(1<<CS12)       ; normal mode, clk/256
-000063 9340 0081                           sts       TCCR1B,r20          ; clock is started
+00005c e044                                ldi       r20,(1<<CS12)       ; normal mode, clk/256
+00005d 9340 0081                           sts       TCCR1B,r20          ; clock is started
                                  
-000065 e041                                ldi       r20,(1<<TOIE1)      ; enable timer overflow interrupt
-000066 9340 006f                           sts       TIMSK1,r20
+00005f e041                                ldi       r20,(1<<TOIE1)      ; enable timer overflow interrupt
+000060 9340 006f                           sts       TIMSK1,r20
                                  
-000068 9508                                ret                           ; delay_tm1
+000062 9508                                ret                           ; delay_tm1
                                  
                                  ; ------------------------------------------------------------
                                  tm1_ISR:
                                  ; handle timer1 interrupts (overflow)
                                  ; ------------------------------------------------------------
-000069 2355                                tst       blueLedCnt          ; if (blueLedCnt != 0)
-00006a f411                                brne      tm1_isr_dec_blue    ;    go dec blue count
+000063 2355                                tst       blueLedCnt          ; if (blueLedCnt != 0)
+000064 f411                                brne      tm1_isr_dec_blue    ;    go dec blue count
                                                                          ; else
-00006b 982a                                cbi       PORTB,PB2           ;    turn off blue LED
-00006c c001                                rjmp      tm1_isr_green
+000065 982a                                cbi       PORTB,PB2           ;    turn off blue LED
+000066 c001                                rjmp      tm1_isr_green
                                  
                                  tm1_isr_dec_blue:
-00006d 955a                                dec       blueLedCnt          ;  blueLedCnt--          
+000067 955a                                dec       blueLedCnt          ;  blueLedCnt--          
                                            
                                  tm1_isr_green:
-00006e 2366                                tst       greenLedCnt          ; if (greenLedCnt != 0)
-00006f f411                                brne      tm1_isr_dec_green    ;    go dec green count
+000068 2366                                tst       greenLedCnt          ; if (greenLedCnt != 0)
+000069 f411                                brne      tm1_isr_dec_green    ;    go dec green count
                                                                           ; else
-000070 982c                                cbi       PORTB,PB4            ;    turn off green LED
-000071 c001                                rjmp      tm1_isr_red
+00006a 982c                                cbi       PORTB,PB4            ;    turn off green LED
+00006b c001                                rjmp      tm1_isr_red
                                  
                                  tm1_isr_dec_green:
-000072 956a                                dec       greenLedCnt          ;  greenLedCnt--   
+00006c 956a                                dec       greenLedCnt          ;  greenLedCnt--   
                                  
                                  tm1_isr_red:
-000073 2377                                tst       redLedCnt
-000074 f411                                brne      tm1_isr_dec_red
+00006d 2377                                tst       redLedCnt
+00006e f411                                brne      tm1_isr_dec_red
                                  
-000075 982b                                cbi       PORTB, PB3
-000076 c001                                rjmp      tm1_isr_white
+00006f 982b                                cbi       PORTB, PB3
+000070 c001                                rjmp      tm1_isr_white
                                  
                                  tm1_isr_dec_red:
-000077 957a                                dec       redLedCnt
+000071 957a                                dec       redLedCnt
                                  
                                  tm1_isr_white:
-000078 2388                                tst       whiteLedCnt
-000079 f411                                brne      tm1_isr_dec_white
+000072 2388                                tst       whiteLedCnt
+000073 f411                                brne      tm1_isr_dec_white
                                  
-00007a 982d                                cbi       PORTB, PB5
-00007b c001                                rjmp      tm1_isr_ret
+000074 982d                                cbi       PORTB, PB5
+000075 c001                                rjmp      tm1_isr_ret
                                  
                                  tm1_isr_dec_white:
-00007c 958a                                dec       whiteLedCnt
+000076 958a                                dec       whiteLedCnt
                                  
                                  tm1_isr_ret:
-00007d e04b                                ldi       r20,HIGH(DELAY_CNT) ; reset timer counter
-00007e 9340 0085                           sts       TCNT1H,r20
-000080 ed4c                                ldi       r20,LOW(DELAY_CNT)
-000081 9340 0084                           sts       TCNT1L,r20
+000077 e04b                                ldi       r20,HIGH(DELAY_CNT) ; reset timer counter
+000078 9340 0085                           sts       TCNT1H,r20
+00007a ed4c                                ldi       r20,LOW(DELAY_CNT)
+00007b 9340 0084                           sts       TCNT1L,r20
                                  
-000083 9518                                reti
+00007d 9518                                reti
                                  
                                  blue_led_btn_ISR:
                                  ; handle external interrupts 0 calls for the Blue LED button
                                  ; ------------------------------------------------------------
-000084 2355                                tst       blueLedCnt          ; if (blueLedCnt != 0)
-000085 f411                                brne      blue_led_btn_ret    ;    return
+00007e 2355                                tst       blueLedCnt          ; if (blueLedCnt != 0)
+00007f f411                                brne      blue_led_btn_ret    ;    return
                                                                          ; else
-000086 9a2a                                sbi       PORTB,PB2           ;    turn on Blue LED
-000087 e053                                ldi       blueLedCnt,LED_DELAY;    set LED counter
+000080 9a2a                                sbi       PORTB,PB2           ;    turn on Blue LED
+000081 e053                                ldi       blueLedCnt,LED_DELAY;    set LED counter
                                  
                                  blue_led_btn_ret:
-000088 9518                                reti
+000082 9518                                reti
                                  
                                  red_led_btn_ISR:
-000089 2377                                tst       redLedCnt
-00008a f411                                brne      red_led_btn_ret
+000083 2377                                tst       redLedCnt
+000084 f411                                brne      red_led_btn_ret
                                            
-00008b 9a2b                                sbi       PORTB,PB3
-00008c e073                                ldi       redLedCnt, LED_DELAY
+000085 9a2b                                sbi       PORTB,PB3
+000086 e073                                ldi       redLedCnt, LED_DELAY
                                  
                                  red_led_btn_ret:
-00008d 9518                                reti
+000087 9518                                reti
                                  
                                  green_led_btn_ISR:
                                  ; handle pin-change interrupts calls for the Green LED button
@@ -1185,32 +1181,32 @@ AVRASM ver. 2.2.8  C:\Users\Fed\OneDrive - Florida Gulf Coast University\Documen
                                  ; Since PD4 is in high-impedance, we only want to handle
                                  ; intterupts when the voltage change was from low->high (rising edge)
                                  ; ------------------------------------------------------------
-00008e 9b4c                                sbis      PIND,PIND4          ; if(rising-edge) //skip
-00008f c004                                rjmp      green_led_btn_ret   ; else return
+000088 9b4c                                sbis      PIND,PIND4          ; if(rising-edge) //skip
+000089 c004                                rjmp      green_led_btn_ret   ; else return
                                  
-000090 2366                                tst       greenLedCnt         ; if (greenLedCnt != 0)
-000091 f411                                brne      green_led_btn_ret   ;    return
+00008a 2366                                tst       greenLedCnt         ; if (greenLedCnt != 0)
+00008b f411                                brne      green_led_btn_ret   ;    return
                                                                          ; else
-000092 9a2c                                sbi       PORTB,PB4           ;    turn on Green LED
-000093 e063                                ldi       greenLedCnt,LED_DELAY;   set LED counter
+00008c 9a2c                                sbi       PORTB,PB4           ;    turn on Green LED
+00008d e063                                ldi       greenLedCnt,LED_DELAY;   set LED counter
                                  
                                  green_led_btn_ret:
-000094 9518                                reti
+00008e 9518                                reti
                                  
                                  white_led_btn_ISR:
                                  ; handle pin-change interrupts calls for the Green LED button
                                  ; ------------------------------------------------------------
-000095 9b4d                                sbis      PIND,PIND5          ; if(rising-edge) //skip
-000096 c004                                rjmp      white_led_btn_ret   ; else return
+00008f 9b4d                                sbis      PIND,PIND5          ; if(rising-edge) //skip
+000090 c004                                rjmp      white_led_btn_ret   ; else return
                                  
-000097 2388                                tst       whiteLedCnt         ; if (greenLedCnt != 0)
-000098 f411                                brne      white_led_btn_ret   ;    return
+000091 2388                                tst       whiteLedCnt         ; if (greenLedCnt != 0)
+000092 f411                                brne      white_led_btn_ret   ;    return
                                                                          ; else
-000099 9a2d                                sbi       PORTB,PB5           ;    turn on Green LED
-00009a e083                                ldi       whiteLedCnt,LED_DELAY;   set LED counter
+000093 9a2d                                sbi       PORTB,PB5           ;    turn on Green LED
+000094 e083                                ldi       whiteLedCnt,LED_DELAY;   set LED counter
                                  
                                  white_led_btn_ret:
-00009b 9518                                reti
+000095 9518                                reti
 
 
 RESOURCE USE INFORMATION
@@ -1230,10 +1226,10 @@ counted separately from r26..r31 here.
 "ATmega328P" register use summary:
 x  :   0 y  :   0 z  :   0 r0 :   0 r1 :   0 r2 :   0 r3 :   0 r4 :   0 
 r5 :   0 r6 :   0 r7 :   0 r8 :   0 r9 :   0 r10:   0 r11:   0 r12:   0 
-r13:   0 r14:   0 r15:   0 r16:   0 r17:   0 r18:   0 r19:   4 r20:  20 
+r13:   0 r14:   0 r15:   0 r16:   0 r17:   0 r18:   0 r19:   0 r20:  20 
 r21:   4 r22:   4 r23:   4 r24:   4 r25:   0 r26:   0 r27:   0 r28:   0 
 r29:   0 r30:   0 r31:   0 
-Registers used: 6 out of 35 (17.1%)
+Registers used: 5 out of 35 (14.3%)
 
 "ATmega328P" instruction use summary:
 .lds  :   0 .sts  :   0 adc   :   0 add   :   0 adiw  :   0 and   :   0 
@@ -1246,21 +1242,21 @@ clc   :   0 clh   :   0 cli   :   0 cln   :   0 clr   :   1 cls   :   0
 clt   :   0 clv   :   0 clz   :   0 com   :   0 cp    :   0 cpc   :   0 
 cpi   :   0 cpse  :   0 dec   :   4 eor   :   0 fmul  :   0 fmuls :   0 
 fmulsu:   0 icall :   0 ijmp  :   0 in    :   0 inc   :   0 jmp   :   6 
-ld    :   0 ldd   :   0 ldi   :  15 lds   :   0 lpm   :   0 lsl   :   0 
+ld    :   0 ldd   :   0 ldi   :  13 lds   :   0 lpm   :   0 lsl   :   0 
 lsr   :   0 mov   :   0 movw  :   0 mul   :   0 muls  :   0 mulsu :   0 
 neg   :   0 nop   :   0 or    :   0 ori   :   0 out   :   0 pop   :   0 
 push  :   0 rcall :   0 ret   :   1 reti  :   5 rjmp  :   7 rol   :   0 
 ror   :   0 sbc   :   0 sbci  :   0 sbi   :  12 sbic  :   0 sbis  :   2 
 sbiw  :   0 sbr   :   0 sbrc  :   0 sbrs  :   0 sec   :   0 seh   :   0 
 sei   :   1 sen   :   0 ser   :   0 ses   :   0 set   :   0 sev   :   0 
-sez   :   0 sleep :   0 spm   :   0 st    :   0 std   :   0 sts   :  12 
+sez   :   0 sleep :   0 spm   :   0 st    :   0 std   :   0 sts   :  10 
 sub   :   0 subi  :   0 swap  :   0 tst   :   8 wdr   :   0 
 Instructions used: 15 out of 113 (13.3%)
 
 "ATmega328P" memory use summary [bytes]:
 Segment   Begin    End      Code   Data   Used    Size   Use%
 ---------------------------------------------------------------
-[.cseg] 0x000000 0x000138    232      0    232   32768   0.7%
+[.cseg] 0x000000 0x00012c    220      0    220   32768   0.7%
 [.dseg] 0x000100 0x000100      0      0      0    2048   0.0%
 [.eseg] 0x000000 0x000000      0      0      0    1024   0.0%
 
