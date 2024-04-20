@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.2.8  C:\Users\Fed\OneDrive - Florida Gulf Coast University\Documents\CDA3104\group_project\GroupProject\group7_simon_says.asm Fri Apr 19 12:16:21 2024
+AVRASM ver. 2.2.8  C:\Users\Fed\OneDrive - Florida Gulf Coast University\Documents\CDA3104\group_project\GroupProject\group7_simon_says.asm Fri Apr 19 21:09:39 2024
 
 
 EQU  SIGNATURE_000 0000001e
@@ -697,28 +697,36 @@ EQU  SPMRaddr     00000032
 EQU  INT_VECTORS_SIZE 00000034
 EQU  DELAY_CNT    00000bdc
 EQU  LED_DELAY    00000003
+EQU  blueLed      00000003
+EQU  greenLed     00000002
+EQU  redLed       00000004
+EQU  whiteLed     00000005
+EQU  blueLedBtn   00000003
+EQU  greenLedBtn  00000002
+EQU  redLedBtn    00000004
+EQU  whiteLedBtn  00000001
 DEF  blueLedCnt   r21
 DEF  greenLedCnt  r22
 DEF  redLedCnt    r23
 DEF  whiteLedCnt  r24
 CSEG main         00000034
-CSEG blue_led_btn_ISR 0000007e
-CSEG red_led_btn_ISR 00000083
-CSEG green_led_btn_ISR 00000088
-CSEG white_led_btn_ISR 0000008f
-CSEG tm1_ISR      00000063
-CSEG tm1_init     00000053
-CSEG main_loop    00000052
-CSEG end_main     00000052
-CSEG tm1_isr_dec_blue 00000067
-CSEG tm1_isr_green 00000068
-CSEG tm1_isr_dec_green 0000006c
-CSEG tm1_isr_red  0000006d
-CSEG tm1_isr_dec_red 00000071
-CSEG tm1_isr_white 00000072
-CSEG tm1_isr_dec_white 00000076
-CSEG tm1_isr_ret  00000077
-CSEG blue_led_btn_ret 00000082
-CSEG red_led_btn_ret 00000087
-CSEG green_led_btn_ret 0000008e
-CSEG white_led_btn_ret 00000095
+CSEG green_led_btn_ISR 00000086
+CSEG blue_led_btn_ISR 00000081
+CSEG red_led_btn_ISR 0000008b
+CSEG white_led_btn_ISR 00000092
+CSEG tm1_ISR      00000066
+CSEG tm1_init     00000056
+CSEG main_loop    00000055
+CSEG end_main     00000055
+CSEG tm1_isr_dec_blue 0000006a
+CSEG tm1_isr_green 0000006b
+CSEG tm1_isr_dec_green 0000006f
+CSEG tm1_isr_red  00000070
+CSEG tm1_isr_dec_red 00000074
+CSEG tm1_isr_white 00000075
+CSEG tm1_isr_dec_white 00000079
+CSEG tm1_isr_ret  0000007a
+CSEG blue_led_btn_ret 00000085
+CSEG green_led_btn_ret 0000008a
+CSEG red_led_btn_ret 00000091
+CSEG white_led_btn_ret 00000098
