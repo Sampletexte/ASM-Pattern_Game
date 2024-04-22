@@ -1,7 +1,7 @@
 ;
 ; File Name  : gpio_tm1_int.asm
 ;
-; Author     : Prof. Allen
+; Author     : Amanda Smith, Clinton Oho, Nicholas Hubbard, Fedmichard Francois
 ; Description: GPIO Output with timers and interrupts
 ;   Uses Timer1 with Overflow Interrupt, External Interrupt 0,
 ;   and a Pin-Change interrupt 
