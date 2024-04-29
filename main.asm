@@ -1,10 +1,10 @@
 ;
-; File Name  : gpio_tm1_int.asm
+; File Name  : main.asm
 ;
-; Author     : Prof. Allen
-; Description: GPIO Output with timers and interrupts
-;   Uses Timer1 with Overflow Interrupt, External Interrupt 0,
-;   and a Pin-Change interrupt 
+; Author     : Group 7
+; Description: Pattern Game, has 6 different patterns tha
+; will light up to 7 lights and waits for input after each
+; input 
 ; ------------------------------------------------------------
 
 ; timer
@@ -97,11 +97,11 @@ main:
           cbi       DDRD,DDD2           ; set Green LED Btn to input (D2)
           sbi       PORTD,greenLedBtn   ; engage pull-up
           sbi       EIMSK,INT0          ; enable external interrupt 0 for Blue LED Btn
-          LDI	r20, (0b10<<ISC10)  ; load 10 in ISC11:ISC10 
+          LDI		r20, (0b10<<ISC10) 	; load 10 in ISC11:ISC10 
 
-          ORI	r20, (0b10<<ISC00)  ; load 10 in ISC01:ISC00 
+          ORI		r20, (0b10<<ISC00)  ; load 10 in ISC01:ISC00 
 
-          STS	EICRA,r20     ; set falling edge sense bits for ext int 0
+          STS		EICRA,r20     		; set falling edge sense bits for ext int 0
 
           cbi       DDRD,DDD3           ; set Blue LED Btn to input (D3)
           sbi       PORTD,blueLedBtn    ; engage pull-up
@@ -121,14 +121,14 @@ main:
           call      tm1_init
           
           ldi       r16,0
-          mov       pat_col, r8
+          mov       pat_col, r8			; storing arrays column in r8 for comparison once we get to final column
           mov       pat_row,r16
           mov       pat_col, pat_row
 
 
        
 
-patterns:
+patterns:								; patterns array
 .db 4,1,3,1,0,0,0,0
 .db 4,3,2,1,0,0,0,0    
 .db 1,3,2,4,0,0,0,0  
@@ -139,7 +139,7 @@ patterns:
 
 
 main_loop:  
-          cli                        ;clear the global interrupt flag
+          cli                        	;clear the global interrupt flag
           call      show_next
           
 end_main:
