@@ -10,7 +10,6 @@
 ; timer
 .equ DELAY_CNT = 65536 - (50000 / 16) ; 16 == 1 / 16MHz / 256
 
-
 ; Delay time in seconds
 .equ LED_DELAY = 1
 .equ SLOW_SPEED = 40
@@ -21,20 +20,18 @@
 .equ greenLed = PB2
 .equ redLed = PB4
 .equ whiteLed = PB5
-
+.equ loseLed = PD5
+.equ winLed = PB0
 ; Button Ports
 .equ blueLedBtn = PD3
 .equ greenLedBtn = PD2
 .equ redLedBtn = PD4
 .equ whiteLedBtn = PB1
-
 ; Led Count Registers
 .def blueLedCnt = R21
 .def greenLedCnt = R22
 .def redLedCnt = R23
 .def whiteLedCnt = R24
-
-
 ;Button Pressed Comparison Values
 .equ whiteButtonPress = 4
 .equ blueButtonPress = 3
@@ -55,7 +52,8 @@
 
 .org INT0addr                           ; Ext Int 0 for green LED Button
           jmp       green_led_btn_ISR 
-.org INT1addr                          ; Ext Int 1 for blue LED Button
+
+.org INT1addr                           ; Ext Int 1 for blue LED Button
           jmp       blue_led_btn_ISR
 
 .org PCI2addr                           ; Pin Change Int 2 for red LED Button
@@ -88,6 +86,12 @@ main:
 
           sbi       DDRB,DDB5           ; setting white LED pin to output (D12)
           cbi       PORTB,whiteLed      ; turn white LED Off (D14)
+
+          sbi       DDRB, DDD6          ; lose LED
+          cbi       PORTB, loseLed      ; turn lose LED off
+
+          sbi       DDRD, DDB0          ; win LED pin to output
+          cbi       PORTD, winLed       ; turn win LED off           
 
 
           cbi       DDRD,DDD2           ; set Green LED Btn to input (D2)
@@ -127,35 +131,21 @@ main:
 patterns:
 .db 4,1,3,1,0,0,0,0
 .db 4,3,2,1,0,0,0,0    
-<<<<<<< Updated upstream
-.db 1,3,2,4,0,0,0,0   
-=======
 .db 1,3,2,4,0,0,0,0  
 .db 1,2,2,4,1,0,0,0 
 .db 3,2,1,0,0,0,0,0
 .db 1,1,1,3,4,0,0,0
->>>>>>> Stashed changes
 .db 5,0,0,0,0,0,0,0
 
 
 main_loop:  
           cli                        ;clear the global interrupt flag
-<<<<<<< Updated upstream
-          
-          call     show_next
-                 
-=======
           call      show_next
->>>>>>> Stashed changes
           
 end_main:
           rjmp      main_loop           ; stay in main loop
 
-
- 
-
 show_next:
-          
           ldi       ZH,HIGH(patterns<<1)
           ldi       ZL,LOW(patterns<<1)
 
@@ -185,11 +175,10 @@ find_pat_col:
           dec       r16                 ; pat_col_indx--
 
           rjmp      find_pat_col
+
 at_pat_col:
 
           lpm       r27,Z               ; r27 = patterns[row][col]
-          
-          
 
 show_led:
           cpi       r27,1               ; if(patterns[row][col] == 1                     
@@ -207,23 +196,19 @@ show_led:
           cpi       r27,5
           breq      endgame             ;if(patterns[row][col] == 5
                                         ;else {
-    
           ldi       r16,0               ; reset col } 
           mov       pat_col,r16
-
           
-          mov    temp_pat_row,pat_row      
+          mov       temp_pat_row,pat_row      
           inc       pat_row
           sei
           ldi       r27,1
-          call       input_loop
+          call      input_loop
           cli
           ldi       r19,1   
           call      delay_ms
           call      delay_ms
           ret
-
-
                     
 greenledshow:
           call      delay_ms
@@ -232,6 +217,7 @@ greenledshow:
           cbi       PORTB,greenled
           inc       pat_col
           ret
+
 redledshow:
           call      delay_ms
           sbi       PORTB,redled
@@ -250,11 +236,12 @@ blueledshow:
 
 whiteledshow:
           call      delay_ms
-          sbi       PORTB,whiteled
+          sbi       PORTB,whiteLed
           call      delay_ms
-          cbi       PORTB,whiteled
+          cbi       PORTB,whiteLed
           inc       pat_col
           ret
+
 endgame:
           sbi       PORTB,greenled
           rjmp      endgame
@@ -263,9 +250,6 @@ endgame:
 ;----------------------------------------
 
 input_loop:
-         
-         
-
           cli
           call      delay_ms
           cp        r19, r8                
@@ -273,13 +257,11 @@ input_loop:
           sei
           call      delay_ms
           rjmp      input_loop
-          
-
 
 ret_input_loop:
-         ldi       r16,0               ; reset col } 
-         mov       pat_col,r16 
-         ret                           ; exit loop
+          ldi       r16,0               ; reset col } 
+          mov       pat_col,r16 
+          ret                           ; exit loop
 
 show_next_input:           
           ldi       ZH,HIGH(patterns<<1)
@@ -297,8 +279,6 @@ find_temp_pat_row:
           rjmp      find_temp_pat_row
 
 at_temp_pat_row:
-
-
           mov       r16,pat_col           ; pat_col_indx      
   
 find_temp_pat_col:
@@ -309,42 +289,36 @@ find_temp_pat_col:
 
           dec       r16                 ; pat_col_indx--
 
-          rjmp      find_temp_pat_col      
+          rjmp      find_temp_pat_col 
+     
 at_temp_pat_col:
-
           lpm       r27,Z               ; r27 = patterns[row][col]
           
   
-show_temp:
-
-          
+show_temp:          
           cp        r27,r18   
           brne      fail_condition
 
           
           cp         r27,r18
           breq      win_condition
-
-         
-          
-
                                         ;else {
-         
-
-          
-         
           reti
 
 fail_condition:
-                 
-          sbi       PORTB,redLED
-          call      delay_ms
-          rjmp      fail_condition
+          sbi       PORTD,loseLed
+          call      delay_ms_show
+          cbi       PORTD, loseLed
+          ldi       ZH,HIGH(patterns<<0)
+          ldi       ZL,LOW(patterns<<0)
+          rjmp      main
 
 win_condition:
-          inc      r19
-          inc      pat_col
+          sbi       PORTB, winLed
+          inc       r19
+          inc       pat_col
           call      delay_ms
+          cbi       PORTB, winLed
           reti 
 
 ; ------------------------------------------------------------
@@ -365,12 +339,8 @@ tm1_init:
 
           ldi       r20,(1<<TOIE1)      ; enable timer overflow interrupt
           sts       TIMSK1,r20
-          
-          
 
-          ret            ;
-;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     sazsazA
-; 
+          ret 
 
 delay_ms:
 ; creates a timed delay using multiple nested loops
@@ -395,6 +365,33 @@ delay_ms_3:
           brne      delay_ms_1          ; 16 * 250K = 4M (1/4s ex)
 dealy_ms_end:
           ret         
+
+
+delay_ms_show:
+; creates a timed delay using multiple nested loops for failed pattern
+; ------------------------------------------------------------
+          ldi       r18, 200
+delay_ms_show_1:
+
+          ldi       r17,200
+delay_ms_show_2:
+
+          ldi       r16,250
+delay_ms_show_3:
+          nop
+          nop
+          dec       r16
+          brne      delay_ms_show_3          ; 250 * 5 = 1250
+
+          dec       r17
+          brne      delay_ms_show_2          ; 200 * 1250 = 250K
+
+          dec       r18
+          brne      delay_ms_show_1          ; 16 * 250K = 4M (1/4s ex)
+dealy_ms_show_end:
+          ret         
+
+
 ; ------------------------------------------------------------
 ;                    Timer ISR's
 ; ------------------------------------------------------------
@@ -601,23 +598,3 @@ white_led_btn_ret:
 ;patterns:
 ;         .db      1,2,3,4,0,0,0,0
 ;         ,db      4,3,2,1,0,0,0,0
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
-;
