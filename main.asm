@@ -8,7 +8,7 @@
 ; ------------------------------------------------------------
 
 ; timer
-.equ DELAY_CNT = 65536 - (1000000 / 16) ; 16 == 1 / 16MHz / 256
+.equ DELAY_CNT = 65536 - (50000 / 16) ; 16 == 1 / 16MHz / 256
 
 
 ; Delay time in seconds
@@ -117,6 +117,7 @@ main:
           call      tm1_init
           
           ldi       r16,0
+          mov       pat_col, r8
           mov       pat_row,r16
           mov       pat_col, pat_row
 
@@ -126,15 +127,26 @@ main:
 patterns:
 .db 4,1,3,1,0,0,0,0
 .db 4,3,2,1,0,0,0,0    
+<<<<<<< Updated upstream
 .db 1,3,2,4,0,0,0,0   
+=======
+.db 1,3,2,4,0,0,0,0  
+.db 1,2,2,4,1,0,0,0 
+.db 3,2,1,0,0,0,0,0
+.db 1,1,1,3,4,0,0,0
+>>>>>>> Stashed changes
 .db 5,0,0,0,0,0,0,0
 
 
 main_loop:  
           cli                        ;clear the global interrupt flag
+<<<<<<< Updated upstream
           
           call     show_next
                  
+=======
+          call      show_next
+>>>>>>> Stashed changes
           
 end_main:
           rjmp      main_loop           ; stay in main loop
@@ -256,8 +268,8 @@ input_loop:
 
           cli
           call      delay_ms
-          cpi       r19,5                
-          breq      ret_input_loop
+          cp        r19, r8                
+          brne      ret_input_loop
           sei
           call      delay_ms
           rjmp      input_loop
